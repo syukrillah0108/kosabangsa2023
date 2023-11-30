@@ -13,7 +13,7 @@ FirebaseAuth auth;
 FirebaseConfig config;
 
 HX711 scale;
-float calibration_factor = -31; //Nilai awal perkiraan
+float calibration_factor = -28;
 float units;
 
 const int LOADCELL_DOUT_PIN = 12;
@@ -26,21 +26,64 @@ void HX_begin(){
   scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
   scale.set_scale();
   scale.tare();
-  long zero_factor = scale.read_average(); 
-  Serial.print("Zero factor: ");
-  Serial.println(zero_factor);
 }
 
-void Firebase_begin(){
+float HX_data(){
+  scale.set_scale(calibration_factor);
+  units = scale.get_units();
+  return units;
+}
+
+void HX_calibration(){
+  scale.set_scale(calibration_factor);
+  Serial.print("Pembacaan : ");
+  units = scale.get_units();
+  if (units < 0){
+    units = 0.00;
+  }
+  lcd.print(units);
+  Serial.print(units);
+  delay(100);
+  Serial.print(" calibration_factor: ");
+  Serial.println(calibration_factor);
+  if(Serial.available()){
+    char temp = Serial.read();
+    if(temp == '+' || temp == 'a'){
+      calibration_factor += 1;
+    }
+    else if(temp == '-' || temp == 'z'){
+      calibration_factor -= 1;
+    }
+  }
+}
+
+void Firebase_begin(const uint8_t Pin){
     config.api_key = API_KEY;
     config.database_url = DATABASE_URL;
 
     if (Firebase.signUp(&config, &auth, "", "")) {
         Serial.println("ok");
         signupOK = true;
+        lcd.clear();  
+        lcd.setCursor(0,0);
+        lcd.print("Database :");
+        lcd.setCursor(0,1);
+        lcd.print ("Terhubung");
+        delay(2000);
     }
     else {
         Serial.printf("%s\n", config.signer.signupError.message.c_str());
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("Database :");
+        lcd.setCursor(0,1);
+        lcd.print ("Gagal Terhubung");
+        lcd.setCursor(0,3);
+        lcd.print("Tekan Tombol Merah");
+        while (digitalRead(Pin) == HIGH){
+          delay(100);
+        }
+        setup();
     }
 
     config.token_status_callback = tokenStatusCallback;
@@ -63,19 +106,22 @@ void Firebase_send(String Kg, String tanggal, String tipe){
     }
     sendDataPrevMillis = millis();
     if (
-        (Firebase.RTDB.setString(&fbdo, "Data/"+String(val)+"/Kg", Kg)) &&
-        (Firebase.RTDB.setString(&fbdo, "Data/"+String(val)+"/Status", "1")) &&
-        (Firebase.RTDB.setString(&fbdo, "Data/"+String(val)+"/Tanggal", tanggal)) &&
-        (Firebase.RTDB.setString(&fbdo, "Data/"+String(val)+"/TanggalPanen", "null")) &&
-        (Firebase.RTDB.setString(&fbdo, "Data/"+String(val)+"/TanggalProses", "null")) &&
-        (Firebase.RTDB.setString(&fbdo, "Data/"+String(val)+"/Type", tipe)) &&
+        (Firebase.RTDB.setInt(&fbdo, "Data/"+String(val)+"/id", val)) &&
+        (Firebase.RTDB.setString(&fbdo, "Data/"+String(val)+"/weight", Kg)) &&
+        (Firebase.RTDB.setInt(&fbdo, "Data/"+String(val)+"/status", 1)) &&
+        (Firebase.RTDB.setString(&fbdo, "Data/"+String(val)+"/date_start", tanggal)) &&
+        (Firebase.RTDB.setString(&fbdo, "Data/"+String(val)+"/date_process", "null")) &&
+        (Firebase.RTDB.setString(&fbdo, "Data/"+String(val)+"/date_harvest", "null")) &&
+        (Firebase.RTDB.setString(&fbdo, "Data/"+String(val)+"/type", tipe)) &&
+        (Firebase.RTDB.setInt(&fbdo, "Data/"+String(val)+"/is_ecoenzym", 0)) &&
+        (Firebase.RTDB.setInt(&fbdo, "Data/"+String(val)+"/is_compost", 0)) &&
         (Firebase.RTDB.setInt(&fbdo, "Data/Jumlah", val))
       ) {
-      Serial.println("PASSED");
-      Serial.println("PATH: " + fbdo.dataPath());
+      terkirim();
+      delay(3000);
     }
-    delay(1000);
-  }else{
-    Serial.println("Firebase Gagal");
+    else{
+      gagal_terkirim(1);
+    }
   }
 }

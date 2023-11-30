@@ -2,6 +2,9 @@
 #include <LiquidCrystal_I2C.h> 
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
+String tipe = "Organik  ";
+bool active = false;
+
 void logo(){
   lcd.backlight();
 
@@ -20,66 +23,48 @@ void logo(){
   lcd.clear();
 }
 
-void select(byte x){
-    if (x==0){
-        lcd.setCursor(0,1);
-        lcd.print("   ");
-        lcd.setCursor(0,0);
-        lcd.print("=>");
-    } else if (x==1)
-    {
-        lcd.setCursor(0,0);
-        lcd.print("   ");
-        lcd.setCursor(0,1);
-        lcd.print("=>");
-    } else{
-        lcd.setCursor(0,0);
-        lcd.print("   ");
-        lcd.setCursor(0,1);
-        lcd.print("   ");
-    }
+void terkirim(){
+  lcd.clear();
+  lcd.setCursor(3,1);
+  lcd.print("Data Berhasil");
+  lcd.setCursor(5,2);
+  lcd.print("Terkirim");
 }
 
-void menu_mode(){
-    lcd.clear();
-    lcd.print("   Manual");
-    lcd.setCursor(0,1);
-    lcd.print("   Otomatis");
+void gagal_terkirim(const uint8_t Pin){
+  lcd.clear();
+  lcd.setCursor(4,0);
+  lcd.print("Data Gagal");
+  lcd.setCursor(5,1);
+  lcd.print("Terkirim");
+  lcd.setCursor(0,3);
+  lcd.print("Tekan Tombol Merah");
+  while (digitalRead(Pin) == HIGH){
+    delay(100);
+  }
+  setup();
 }
 
-byte x=0;
-bool active=false;
-
-void chose(const uint8_t pin_slc, const uint8_t pin_sbmt){
-  while (true){
-  if((digitalRead(pin_slc) == LOW) && active==false){
-    Serial.print(x);
-    if (x==1){
-      x=0;
-    } else if (x==0){
-      x=1;
-    } else{
-      x=0;
+void select_jenis(const uint8_t Pin){
+  if (digitalRead(Pin) == LOW && active == false){
+    if (tipe == "Organik  "){
+      tipe = "Anorganik";
+    }else{
+      tipe = "Organik  ";
     }
-    select(x);
-    active=true;
-  } else if (
-    (digitalRead(pin_slc) == HIGH) && active==true){
-    active=false;
+    active = true;
+  } else if (digitalRead(Pin) == HIGH){
+    active = false;
   }
+}
 
-  if(digitalRead(pin_sbmt) == LOW){
-    lcd.clear();
-    delay(1000);
-    //digitalWrite(14,HIGH);
-    if(x==0){
-      lcd.print("Manual");
-    } else if (x==1){
-      lcd.print("Otomatis");
-    }
-    //digitalWrite(14,LOW);
-    delay(500);
-    break;
-  }delay(100);
-  }
+void timbang(String berat, String tanggal, String waktu, String tipe){
+  lcd.setCursor(0,0);
+  lcd.print("Tanggal : " + tanggal);
+  lcd.setCursor(0,1);
+  lcd.print ("Waktu   : " + waktu);
+  lcd.setCursor(0,2);
+  lcd.print ("Berat   : " + berat);
+  lcd.setCursor(0,3);
+  lcd.print ("Tipe    : " + tipe);
 }

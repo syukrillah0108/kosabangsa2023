@@ -11,71 +11,58 @@
 void Test_Firebase(){
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.setCursor(0,0);
   lcd.print("Database :");
   lcd.setCursor(0,1);
   lcd.print ("Menghubungkan....");
 
-  Firebase_begin();
-
-  if(signupOK == true){
-    lcd.clear();  
-    lcd.setCursor(0,0);
-    lcd.print("Database :");
-    lcd.setCursor(0,1);
-    lcd.print ("Terhubung");
-    delay(2000);
-  }else{
-    lcd.clear();
-    lcd.setCursor(0,0);
-    lcd.print("Database :");
-    lcd.setCursor(0,1);
-    lcd.print ("Gagal Terhubung");
-    lcd.setCursor(0,3);
-    lcd.print("Tekan Tombol Merah");
-    while (digitalRead(pinSubmit) == HIGH){
-      delay(100);
-    }
-    setup();
-  }
+  Firebase_begin(pinSubmit);
 }
 
 void setup() {
   Serial.begin(115200);
+  pinMode(pinSubmit, INPUT);
+  pinMode(pinZero, INPUT);
+  pinMode(pinSelect, INPUT);
   lcd.begin();
   logo();
-  WifiSetup("Smart Scale");
+  WifiSetup("Scale","scalecode");
+  timeBegin();
   TimeValid(pinSubmit);
   Test_Firebase();
+  HX_begin();
+  delay(1000);
 }
-float berat;
-String tipe;
+String berat;
 void loop() {
-  /*
-  scale.set_scale(calibration_factor);
-  Serial.print("Pembacaan : ");
-  units = scale.get_units();
-  if (units < 0){
-    units = 0.00;
-  }
-  lcd.print(units);
-  Serial.print(units);
   delay(100);
- Serial.print(" calibration_factor: ");
- Serial.println(calibration_factor);
-  if(Serial.available()){
- char temp = Serial.read();
- if(temp == '+' || temp == 'a')
- calibration_factor += 1;
- else if(temp == '-' || temp == 'z')
- calibration_factor -= 1;
- }
-  */
-  // manual
-  lcd.setCursor(8,0);
-  lcd.print(analogRead(A0));
-  lcd.print(" Kg");
-  delay(500);
-  lcd.clear();
-  //Firebase_send("20",GetDateTime());
+  select_jenis(pinSelect);
+  tmp_datetime = GetDateTime();
+  berat = String(HX_data()/1000);
+  lcd.setCursor(11,2);
+  lcd.print ("         ");
+  timbang(berat + " Kg", tmp_datetime[0], tmp_datetime[1], tipe);
+  delay(100);
+  
+  if(analogRead(pinSubmit) == LOW){
+    Firebase_send(berat, tmp_datetime[0]+" "+ tmp_datetime[1], tipe);
+  }
+  if(analogRead(pinZero) == LOW){
+      scale.tare();;
+  }
+  
+  delay(100);
+  if(analogRead(pinSubmit) == LOW){
+    Firebase_send(berat, tmp_datetime[0]+" "+ tmp_datetime[1], tipe);
+  }
+  if(analogRead(pinZero) == LOW){
+      scale.tare();;
+  }
+
+  delay(100);
+  if(analogRead(pinSubmit) == LOW){
+    Firebase_send(berat, tmp_datetime[0]+" "+ tmp_datetime[1], tipe);
+  }
+  if(analogRead(pinZero) == LOW){
+      scale.tare();;
+  }
 }

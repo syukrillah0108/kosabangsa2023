@@ -2,7 +2,7 @@
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h> 
 
-void WifiSetup(const char* ssid){
+void WifiSetup(const char* ssid, const char* pwd){
     WiFiManager wifiManager;
     lcd.clear();
     lcd.setCursor(0,0);
@@ -12,10 +12,9 @@ void WifiSetup(const char* ssid){
 
     lcd.setCursor(0,2);
     lcd.print("IP : 192.168.4.1");
-    wifiManager.autoConnect(ssid);
-
+    wifiManager.autoConnect(ssid,pwd);
     lcd.clear();
-    lcd.print("Terhung ");
+    lcd.print("Wifi Terhubung ");
     delay(2000);
     lcd.clear();
     //Serial.println("connected...yeey :)");
