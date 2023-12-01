@@ -1,9 +1,22 @@
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h> 
+bool online = true;
+bool offline = false;
+
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-String tipe = "Organik  ";
+String tipe = "organik  ";
 bool active = false;
+
+void online_mode(){
+  online = true;
+  offline = false;
+}
+
+void offline_mode(){
+  online = false;
+  offline = true;
+}
 
 void logo(){
   lcd.backlight();
@@ -47,10 +60,10 @@ void gagal_terkirim(const uint8_t Pin){
 
 void select_jenis(const uint8_t Pin){
   if (digitalRead(Pin) == LOW && active == false){
-    if (tipe == "Organik  "){
-      tipe = "Anorganik";
+    if (tipe == "organik  "){
+      tipe = "anorganik";
     }else{
-      tipe = "Organik  ";
+      tipe = "organik  ";
     }
     active = true;
   } else if (digitalRead(Pin) == HIGH){

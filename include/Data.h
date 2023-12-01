@@ -77,7 +77,7 @@ void Firebase_begin(const uint8_t Pin){
         lcd.setCursor(0,0);
         lcd.print("Database :");
         lcd.setCursor(0,1);
-        lcd.print ("Gagal Terhubung");
+        lcd.print("Gagal Terhubung");
         lcd.setCursor(0,3);
         lcd.print("Tekan Tombol Merah");
         while (digitalRead(Pin) == HIGH){
@@ -94,7 +94,7 @@ void Firebase_begin(const uint8_t Pin){
 int val = 1;
 void Firebase_send(String Kg, String tanggal, String tipe){
     if (Firebase.ready() && signupOK && (millis() - sendDataPrevMillis > 100 || sendDataPrevMillis == 0)) {
-    if (Firebase.RTDB.getInt(&fbdo, "/Data/Jumlah")) {
+    if (Firebase.RTDB.getInt(&fbdo, "/Jumlah")) {
       Serial.println("Data retrieved successfully!");
       if(fbdo.dataType() == "int" ) {
         val = fbdo.intData() + 1;
@@ -115,7 +115,7 @@ void Firebase_send(String Kg, String tanggal, String tipe){
         (Firebase.RTDB.setString(&fbdo, "Data/"+String(val)+"/type", tipe)) &&
         (Firebase.RTDB.setInt(&fbdo, "Data/"+String(val)+"/is_ecoenzym", 0)) &&
         (Firebase.RTDB.setInt(&fbdo, "Data/"+String(val)+"/is_compost", 0)) &&
-        (Firebase.RTDB.setInt(&fbdo, "Data/Jumlah", val))
+        (Firebase.RTDB.setInt(&fbdo, "Jumlah", val))
       ) {
       terkirim();
       delay(3000);
@@ -124,4 +124,11 @@ void Firebase_send(String Kg, String tanggal, String tipe){
       gagal_terkirim(1);
     }
   }
+}
+
+void offline_display(float berat){
+  lcd.setCursor(0,0);
+  lcd.print("Gram : " + String(berat));
+  lcd.setCursor(0,2);
+  lcd.print("Kg   : " + String(berat/1000));
 }
