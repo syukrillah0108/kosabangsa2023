@@ -26,38 +26,10 @@ void setup() {
   lcd.begin();
   logo();
   
-  // Pilih mode
-  lcd.setCursor(5,0);
-  lcd.print("Pilih Mode");
-  while (digitalRead(pinSubmit) == HIGH){
-    if (online){
-      lcd.setCursor(2,2);
-      lcd.print("Gunakan Internet");
-    }else if (offline){
-      lcd.setCursor(3,2);
-      lcd.print("Tanpa Internet");
-    }
-    
-    if (digitalRead(pinSelect) == LOW && active == false){
-      if (online){
-        offline_mode();
-      }else if (offline){
-        online_mode();
-      }
-      active = true;
-    } else if (digitalRead(pinSelect) == HIGH){
-      active = false;
-    }
-    lcd.setCursor(0,2);
-    lcd.print("                   ");
-    delay(200);
-  }
-  if (online){
-    WifiSetup("Scale","scalecode");
-    timeBegin();
-    TimeValid(pinSubmit);
-    Test_Firebase();
-  }
+  WifiSetup("Scale","scalecode");
+  timeBegin();
+  TimeValid(pinSubmit);
+  Test_Firebase();
   HX_begin();
   delay(1000);
 }
@@ -66,7 +38,6 @@ String berat;
 
 void loop() {
   delay(100);
-  if (online){
     berat = String(HX_data()/1000);
     select_jenis(pinSelect);
     tmp_datetime = GetDateTime();
@@ -97,22 +68,4 @@ void loop() {
     if(analogRead(pinZero) == LOW){
         scale.tare();
     }
-  }
-
-  else if(offline){
-    offline_display(HX_data());
-
-    if(analogRead(pinZero) == LOW){
-        scale.tare();
-    }
-    delay(100);
-    if(analogRead(pinZero) == LOW){
-        scale.tare();
-    }
-
-    delay(100);
-    if(analogRead(pinZero) == LOW){
-        scale.tare();
-    }
-  }
 }
